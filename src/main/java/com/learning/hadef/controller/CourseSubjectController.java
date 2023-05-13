@@ -55,6 +55,10 @@ public class CourseSubjectController {
             @RequestHeader(name = "AUTH") String auth,
             @PathVariable("code") @Valid String code){
         CourseSubjectDTO courseSubjectByCode = courseSubjectService.getCourseSubjectByCode(code);
+        if(courseSubjectByCode == null){
+            logError(serviceName,"Course not found with code: "+code);
+            return new ResponseEntity<>(NOT_FOUND);
+        }
         return ResponseEntity.ok(courseSubjectByCode);
     }
 
@@ -89,14 +93,6 @@ public class CourseSubjectController {
                                              @RequestHeader(name = "AUTH") String auth,
                                              @PathVariable @Valid Long id){
         courseSubjectService.deleteCourseSubjectById(id);
-        return ResponseEntity.ok("Deleted Successfully");
-    }
-    public ResponseEntity<String> addCoursesToCourseSubject(@RequestHeader(name = "CHN") @Valid String chn,
-                                                            @RequestHeader(name = "LNG") @Valid String lang,
-                                                            @RequestHeader(name = "AUTH") String auth,
-                                                            BindingResult bindingResult,
-                                                            @RequestBody CourseDTO dto){
-        validateBindingResult(bindingResult,FAILED_IN_UPDATE_COURSE);
         return ResponseEntity.ok("Deleted Successfully");
     }
     private void validateBindingResult(BindingResult bindingResult, FailureEnum failureEnum){

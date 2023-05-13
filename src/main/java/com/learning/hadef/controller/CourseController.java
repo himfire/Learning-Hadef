@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.learning.hadef.domain.value.FailureEnum.FAILED_IN_UPDATE_COURSE;
@@ -38,16 +39,6 @@ public class CourseController {
     private List<Course> courses = Arrays.asList(Course.builder().titleEN("Introduction to UI/UX").slugTitle("introduction-to-ui-ux").build(),
             Course.builder().titleEN("Introduction to JAVA").slugTitle("introduction-to-java").build(),
             Course.builder().titleEN("Introduction to Python").slugTitle("introduction-to-python").build());
-    @PostMapping()
-    public ResponseEntity<CreateCourseDTO> createCourse(
-            @RequestHeader(name = "CHN") @Valid String chn,
-            @RequestHeader(name = "LNG") @Valid String lang,
-            @RequestHeader(name = "AUTH") String auth,
-            @Valid @RequestBody CreateCourseDTO dto, BindingResult bindingResult){
-        validateBindingResult(bindingResult, FAILED_TO_CREATE_COURSE);
-        CreateCourseDTO response = courseService.createCourse(lang, chn, dto);
-        return ResponseEntity.ok(response);
-    }
 
     @GetMapping
     public ResponseEntity getAllCourses( @RequestHeader(name = "CHN") @Valid String chn,
@@ -80,16 +71,14 @@ public class CourseController {
         }
         return ResponseEntity.ok(dto);
     }
-
-    @PutMapping
-    public ResponseEntity<CourseDTO> updateCourse(@RequestHeader(name = "CHN") @Valid String chn,
-                                       @RequestHeader(name = "LNG") @Valid String lang,
-                                       @RequestHeader(name = "AUTH") String auth,
-                                       BindingResult bindingResult,
-                                       @RequestBody CourseDTO dto){
-        validateBindingResult(bindingResult,FAILED_IN_UPDATE_COURSE);
-        CourseDTO courseDTO = courseService.updateCourse(dto);
-        return ResponseEntity.ok(courseDTO);
+    @GetMapping("/subject")
+    public ResponseEntity<List<Course>> getCourseBySubjects(
+            @RequestHeader(name = "CHN") @Valid String chn,
+            @RequestHeader(name = "LNG") @Valid String lang,
+            @RequestHeader(name = "AUTH") String auth,
+            @PathVariable @Valid Set<String> subject){
+        List<Course> allCoursesBySubject = courseService.findAllCoursesBySubject(subject);
+        return ResponseEntity.ok(allCoursesBySubject);
     }
 
     @DeleteMapping("/{id}")

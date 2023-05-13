@@ -43,47 +43,42 @@ public class CourseSubjectServiceImpl implements CourseSubjectService {
 
     @Override
     public void deleteCourseSubjectById(Long courseSubjectId) {
-        logInfo(serviceName,"Started delete process for subject course with id %d",courseSubjectId);
-        try{
-            courseSubjectRepository.deleteById(courseSubjectId);
-            logInfo(serviceName,"deleted subject of courses successfully with id : "+courseSubjectId);
-            return;
-
-        }catch(Exception e){
-            e.printStackTrace();
+        logInfo(serviceName,"Started delete process for subject course %d",courseSubjectId);
+        CourseSubject courseSubject = findCourseSubjectById(courseSubjectId);
+        if(courseSubject == null){
+            logError(serviceName,"Error in deleting subject of courses "+courseSubject.getCode());
+            throw new CustomException("Error in deleting subject of courses "+ courseSubject, INTERNAL_SERVER_ERROR.value(),serviceName);
         }
-        throw new CustomException("Error in deleting subject of courses with id : "+courseSubjectId, INTERNAL_SERVER_ERROR.value(),serviceName);
+        courseSubjectRepository.delete(courseSubject);
+        logInfo(serviceName,"deleted subject of courses successfully");
     }
 
     @Override
     public void deleteCourseSubject(CourseSubjectDTO courseSubject) {
         logInfo(serviceName,"Started delete process for subject course %s",courseSubject.toString());
-        try{
-            CourseSubject map = modelMapper.map(courseSubject, CourseSubject.class);
-            courseSubjectRepository.delete(map);
-            logInfo(serviceName,"deleted subject of courses successfully");
-            return;
-
-        }catch(Exception e){
-            e.printStackTrace();
+        CourseSubject courseSubjectById = findCourseSubjectById(courseSubject.getId());
+        if(courseSubjectById == null){
+            throw new CustomException("Error in deleting subject of courses with %d "+ courseSubject.getId(), INTERNAL_SERVER_ERROR.value(),serviceName);
         }
-        throw new CustomException("Error in deleting subject of courses with %d "+ courseSubject.getId(), INTERNAL_SERVER_ERROR.value(),serviceName);
+        courseSubjectRepository.delete(courseSubjectById);
+        logInfo(serviceName,"deleted subject of courses successfully");
     }
 
     @Override
     public CourseSubjectDTO createCourseSubject(CourseSubjectDTO courseSubject) {
         logInfo(serviceName,"Start process of creating new course: %s",courseSubject.getCode());
-        try{
-            if(courseSubjectRepository.findCourseSubjectByCode(courseSubject.getCode()).isPresent()){
+        CourseSubject courseSubjectByCode = findCourseSubjectByCode(courseSubject.getCode());
+        if(courseSubjectByCode != null){
                 logError(serviceName,"Course Subject is already available with the same code "+courseSubject.getCode());
                 throw new CustomException("Course Subject is already available with the same code "+courseSubject.getCode(), NOT_ACCEPTABLE.value(),serviceName);
-            }
+        }
+        try{
             CourseSubject course = modelMapper.map(courseSubject,CourseSubject.class);
             courseSubjectRepository.save(course);
         }catch(Exception e){
-            throw new CustomException("Error in saving course subject "+courseSubject.getCode(), INTERNAL_SERVER_ERROR.value(),serviceName);
+            throw new CustomException("Error in creating course subject "+courseSubject.getCode(), INTERNAL_SERVER_ERROR.value(),serviceName);
         }
-        logInfo(serviceName,"creating course subject is completed | "+courseSubject.getCode());
+        logInfo(serviceName,"Creating course subject is completed | "+courseSubject.getCode());
         return courseSubject;
     }
 
@@ -91,21 +86,8 @@ public class CourseSubjectServiceImpl implements CourseSubjectService {
     public CourseSubjectDTO updateCourseSubject(CourseSubjectDTO courseSubjectDTO) {
         logInfo(serviceName,"Started update subject of courses with code "+courseSubjectDTO.getCode());
         CourseSubjectDTO courseSubjectByTheCode = getCourseSubjectByCode(courseSubjectDTO.getCode());
-        return courseSubjectByTheCode;
-
-        try{
-            Optional<CourseSubject> courseSubjectByCode = courseSubjectRepository.findCourseSubjectByCode(courseSubjectDTO.getCode());
-            if(courseSubjectByCode.isPresent()){
-                CourseSubject courseSubject = courseSubjectByCode.get();
-                Long id = courseSubject.getId();
-                logInfo(serviceName,"Found course subject with code : "+courseSubjectDTO.getCode());
-                courseSubject = modelMapper.map(courseSubjectDTO,CourseSubject.class);
-                courseSubject.setId(id);
-                courseSubjectRepository.save(courseSubject);
-                return courseSubjectDTO;
-            }
-        }catch(Exception e){
-            e.printStackTrace();
+        if(courseSubjectByTheCode != null){
+            return courseSubjectByTheCode;
         }
         throw new CustomException("Error in updating course with code "+courseSubjectDTO.getCode(), INTERNAL_SERVER_ERROR.value(),serviceName);
     }
@@ -153,4 +135,5 @@ public class CourseSubjectServiceImpl implements CourseSubjectService {
         }
         return null;
     }
+
 }
